@@ -27,6 +27,8 @@ public class App {
         area = base * height / 2;
 
         System.out.println("The area of the triangle is: " + area);
+
+        sc.close();
     }
 
     public static void area_of_triangle2() {
@@ -43,6 +45,8 @@ public class App {
         area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
 
         System.out.println("The area of the triangle is: " + area);
+
+        sc.close();
     }
 
     public static void quadratic_formula() {
@@ -75,5 +79,9 @@ public class App {
         volume = height * length * breadth;
 
         System.out.println("The area of the cuboid is: " + area + " || The volume of the cuboid is: " + volume);
+
+        sc.close();
     }
+
+    
 }
