@@ -1,0 +1,70 @@
+using gold.**
+
+var A
+
+procedure main(args:String[]) begin
+	
+	A:= ('a'‥'z')
+
+    unZip:=createTransducer(A)
+    //GAutomataFrame.show(unZip)
+    Utilities.test(unZip)
+end
+
+function createTransducer(Alph):ITransducer begin
+	A:= Alph
+	Q:= {⟨countWord, countStrings, val⟩|0≤countWord≤4 ,0≤countStrings≤3, val in {"aste", "i"}}∪{"F", "I", "E"}
+	Σ:=A∪('0'‥'4')∪{'$', '#', '*', '@'}
+	Σ´:=A ∪ {'$', ' '}
+	q₀:="I"
+	F:={"F"}
+	return 	GDeterministicTransducer(Q,Σ,Σ´,q₀,F,δ1,g,h1)
+end
+
+function δ1(q,s) begin
+	if q = "I" then return ⟨1, 0, "i"⟩
+	else return "E"
+	end
+end
+
+function δ1(⟨countWord, countStrings, val⟩,s) begin
+	
+	if s = '$' and val = "aste" then return "F"
+	
+	elseif s  = '*' and val = "aste" then return ⟨countWord, countStrings, "i"⟩
+		
+	elseif s = '@' and countStrings < 3 and val = "i" then return ⟨countWord, (countStrings + 1)%3, val⟩
+	
+	elseif (s in A or s = '#') and countWord < 4 and val = "i" then return ⟨(countWord + 1)%4, countStrings, val⟩
+	
+	elseif s in ('0'‥'3') and Integer.parseInt(String.valueOf(s)) = (countStrings+1)%3 and countWord = 0 and val = "i" then return ⟨0, 0, "aste"⟩
+		
+	else return "E"
+		
+	end
+end
+
+function h1(q,s) begin
+	if s in A then
+		return s
+	else
+		return λ
+	end
+end
+
+function h1(⟨countWord, countStrings, val⟩,s) begin
+	if s in {'@', '#'} or s in ('0'‥'4') then return λ
+	
+	elseif s in A then return s
+	
+	elseif s = '$' then return '$'
+		
+	elseif s = '*' then return " "
+		
+	end
+end
+
+
+function g(q) begin
+	return λ
+end

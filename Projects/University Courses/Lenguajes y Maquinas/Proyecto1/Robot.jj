@@ -1,0 +1,894 @@
+/*
+Gramatica para el Robot:
+Autor: Alejandro Arango
+Modificado por: Silvia Takahashi
+Modificado por: Juan Pablo Morales.
+Agregadas producciones para manejar globos
+Modificado por Silvia Takahashi
+
+
+ **/
+
+options 
+{
+  
+	LOOKAHEAD=1; 
+	IGNORE_CASE=true;
+	STATIC = false;
+	
+}
+   
+
+PARSER_BEGIN(Robot)
+
+package uniandes.lym.robot.control;
+import uniandes.lym.robot.kernel.*;
+import uniandes.lym.robot.view.Console;
+ 
+import java.awt.Point;
+import java.io.*;
+import java.util.*;
+import java.util.Random;
+
+@SuppressWarnings("serial")
+public class Robot 
+{
+	private RobotWorldDec world;
+	
+	void setWorld(RobotWorld w) {
+		world = (RobotWorldDec) w;	
+	}
+
+	String salida=new String();
+
+	// MODIFICACIONES
+Map<String, Integer> mem = new HashMap<String, Integer>(); //Memory to store variables.
+Map<String, CodeBlock> funcionesDefinidas = new HashMap<String, CodeBlock>();
+
+
+private final int PUSHVARGLOBAL = 0;
+private final int ASIGNARVARGLOBAL = 1;
+private final int PUSHVARLOCAL = 2;
+private final int INICIALIZAR = 3;
+private final int VARIABLESPRECORRER = 4;
+private final int CORRERFUNCION = 5;
+private final int VEERC = 6;
+private final int VEERCANIADIRLOCAL = 7;
+private final int STEPA = 8;
+private final int STEPANIADIRLOCAL = 9;
+private final int LOOKO = 12;
+private final int LOOKODIRLOCAL = 13;
+private final int DROPN = 14;
+private final int DROPNDIRLOCAL = 15;
+private final int GRABN = 16;
+private final int GRABNDIRLOCAL = 17;
+private final int GETN = 18;
+private final int GETNDIRLOCAL = 19;
+private final int FREEN = 20;
+private final int FREENDIRLOCAL = 21;
+private final int POPN = 22;
+private final int POPNDIRLOCAL = 23;
+private final int CONDITIONALISFACING = 24;
+private final int CONDITIONALISFACINGLOCAL = 25;
+private final int CONDICIONALESIFADDLOCAL = 26;
+private final int CONDICIONALESIF = 27;
+private final int CONDICIONALESWHILEADDLOCAL = 28;
+private final int CONDICIONALESWHILE = 29;
+private final int NOTADDLOCAL = 30;
+private final int NOTRUN = 31;
+private final int CONDITIONALCANWALK = 32;
+private final int CONDITIONALCANWALKLOCAL = 33;
+private final int DMOVEA = 34;
+private final int DMOVEALOCAL = 35;
+private final int CONDITIONALISVALID = 36;
+private final int CONDITIONALISVALIDLOCAL = 37;
+private final int JUMPNIRLOCAL = 38;
+private final int JUMPN = 39;
+private final int GRABNLOCAL = 40;
+
+
+
+private final int LOOPREPEAT = 10;
+private final int LOOPREPEATADDLOCAL = 11;
+
+private final String []  names = {"PUSHVARGLOBAL",
+"ASIGNARVARGLOBAL",
+"PUSHVARLOCAL",
+"INICIALIZAR",
+"VARIABLESPRECORRER",
+"CORRERFUNCION",
+"VEERC",
+"VEERCANIADIRLOCAL",
+"STEPA",
+"STEPANIADIRLOCAL",
+"LOOPREPEAT",
+"LOOPREPEATADDLOCAL",
+"LOOKO",
+"LOOKODIRLOCAL",
+"DROPN",
+"DROPNDIRLOCAL",
+"GRABN",
+"GRABNDIRLOCAL",
+"GETN",
+"FREEN",
+"FREENDIRLOCAL",
+"POPN",
+"POPNDIRLOCAL",
+"CONDITIONALISFACING",
+"CONDITIONALISFACINGLOCAL",
+"CONDICIONALESIFADDLOCAL",
+"CONDICIONALESIF",
+"CONDICIONALESWHILEADDLOCAL",
+"CONDICIONALESWHILE",
+"NOTADDLOCAL",
+"NOTRUN",
+"CONDITIONALCANWALK",
+"CONDITIONALCANWALKLOCAL",
+"DMOVEA",
+"DMOVEALOCAL",
+"CONDITIONALISVALID",
+"CONDITIONALISVALIDLOCAL",
+"JUMPNIRLOCAL",
+"JUMPN",
+"GRABNLOCAL",
+};
+
+
+
+ArrayList <CodeBlock> code = new ArrayList <CodeBlock> () ;
+
+
+// SEGUNDO INTENTO DE FUNCION
+private class CodeBlock {
+
+  Map<String, Integer> memLocal = new HashMap<String, Integer>(); //Memory to store variables local variables functions.
+  ArrayList <CodeBlock> codeLocal = new ArrayList <CodeBlock> () ;
+  List<String> myLocalVariables = new Vector<String>();
+  List<Integer> myLocalVariablesValues = new Vector<Integer>();
+  boolean checkCondition;
+
+void changeOptionCheckCondition(boolean localVar) {
+  checkCondition = localVar;
+}
+
+
+
+
+
+	public String generateRandomPassword() {
+	  	int len = 10;
+		String chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk"
+          +"lmnopqrstuvwxyz!@#$%&";
+		Random rnd = new Random();
+		StringBuilder sb = new StringBuilder(len);
+		sb.append("0");
+		for (int i = 0; i < len; i++)
+			sb.append(chars.charAt(rnd.nextInt(chars.length())));
+		return sb.toString();
+	}
+
+
+
+
+
+
+  int type;
+  Object value;
+  Object value2;
+  Object arg = null;
+  CodeBlock workingWithFunc;
+
+public CodeBlock() {
+}
+
+public CodeBlock(int t) {
+  type = t;
+}
+
+public CodeBlock(int t, Object r) {
+  type = t;
+  arg = r;
+}
+
+public CodeBlock(int t, Object r, Object valor) {
+  type = t;
+  arg = r;
+  value = valor;
+}
+
+public CodeBlock(int t, Object r, Object valor, Object valor2) {
+  type = t;
+  arg = r;
+  value = valor;
+  value2 = valor2;
+}
+
+public void pushVarLocalW(String localVar)
+{
+  memLocal.put((String) localVar, 0); myLocalVariables.add((String) localVar);
+}
+
+public void putTryLocalValues (int value)
+{
+  myLocalVariablesValues.add(value);
+}
+
+public void correrFuncionLocal()
+{
+  int i = 0;
+	while (i < myLocalVariables.size())
+	{
+	  memLocal.put((String) myLocalVariables.get(i),  myLocalVariablesValues.get(i));
+	  i += 1;
+	}
+
+        System.out.println("Corriendo Funcion Interna:");
+        System.out.println(codeLocal);
+
+		Iterator <CodeBlock > iCodeBlock = codeLocal.iterator();
+		while (iCodeBlock.hasNext()) {
+        	CodeBlock x = iCodeBlock.next();
+        	//try {
+        	  x.execute();
+        	  //} catch (Error e) { System.out.println (e); break; }  
+		}
+		
+}
+
+public void agregarInstruccionLocalVeer(int argLocal)
+{
+  codeLocal.add(new CodeBlock(VEERC, argLocal));
+}
+
+public void agregarInstruccionLocalStep(Object argLocal, Object nombreFuncion)
+{
+  codeLocal.add(new CodeBlock(STEPA, argLocal, nombreFuncion));
+}
+
+public int getValueFromString(Object argLocal)
+{
+  int stringToValue;
+  
+  if (mem.containsKey((String) argLocal) == true || memLocal.containsKey((String) argLocal) == true)
+  {
+    if (mem.containsKey((String) argLocal) == true)
+    {
+      stringToValue = (int) mem.get((String) argLocal);
+    }
+	else
+	{
+	  stringToValue = (int) memLocal.get((String) argLocal);
+	}
+} else { throw new Error("Undefined variable: "+ (String) arg); }
+return stringToValue;
+}
+
+public void agregarInstruccionLocalRepeat(Object argLocal, Object nombreFuncion)
+{
+  codeLocal.add(new CodeBlock(LOOPREPEAT, argLocal, nombreFuncion));
+}
+
+public void agregarInstruccionLocalLook(int argLocal)
+{
+  codeLocal.add(new CodeBlock(LOOKO, argLocal));
+}
+
+public void agregarInstruccionLocalDrop(Object argLocal)
+{
+  codeLocal.add(new CodeBlock(DROPN, argLocal));
+}
+
+public void agregarInstruccionLocalConditionalFacing(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(CONDITIONALISFACINGLOCAL, argLocal, functionName));
+}
+
+public void agregarInstruccionLocalIfStatement(Object argLocal, Object value)
+{
+  codeLocal.add(new CodeBlock(CONDICIONALESIF, argLocal, value));
+}
+
+public void agregarInstruccionLocalWhileStatement(Object argLocal, Object value)
+{
+  codeLocal.add(new CodeBlock(CONDICIONALESWHILE, argLocal, value));
+}
+
+
+public void agregarInstruccionLocalNOT(Object functionName)
+{
+  codeLocal.add(new CodeBlock(NOTRUN, functionName));
+}
+
+
+public void agregarInstruccionLocalCanWalk(Object argLocal, Object argLocal2, Object functionName)
+{
+  codeLocal.add(new CodeBlock(CONDITIONALCANWALKLOCAL, argLocal, argLocal2, functionName));
+}
+
+
+public void agregarInstruccionLocalDMOVE(Object argLocal, Object nombreFuncion, Object value2)
+{
+  codeLocal.add(new CodeBlock(DMOVEA, argLocal, nombreFuncion, value2));
+}
+
+public void agregarInstruccionLocalINSTRUCCIONISVALID(Object argLocal, Object nombreFuncion, Object value2)
+{
+  codeLocal.add(new CodeBlock(CONDITIONALISVALID, argLocal, nombreFuncion, value2));
+}
+
+public void agregarInstruccionLocalJump(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(JUMPN, argLocal, functionName));
+}
+
+public void agregarInstruccionLocalGRAB(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(GRABN, argLocal, functionName));
+}
+
+public void agregarInstruccionLocalGET(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(GETN, argLocal, functionName));
+}
+
+public void agregarInstruccionLocalFREE(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(FREEN, argLocal, functionName));
+}
+
+public void agregarInstruccionLocalPOPN(Object argLocal, Object functionName)
+{
+  codeLocal.add(new CodeBlock(POPN, argLocal, functionName));
+}
+
+
+public void execute() throws Error {
+  int stringToValue;
+  switch (type) {
+
+    case PUSHVARGLOBAL: mem.put((String) arg, 0); break;
+    case ASIGNARVARGLOBAL: if (mem.get((String) arg) == null)throw new Error("Undefined variable: "+ (String) arg);
+               else mem.put((String) arg, (int) value); break;
+    case PUSHVARLOCAL: workingWithFunc = funcionesDefinidas.get((String) arg);  workingWithFunc.pushVarLocalW((String) value); break;
+	case INICIALIZAR: funcionesDefinidas.put((String) arg, this); break;
+	case VARIABLESPRECORRER: workingWithFunc = funcionesDefinidas.get((String) arg); workingWithFunc.putTryLocalValues((int) value); break;
+	case CORRERFUNCION:  workingWithFunc = funcionesDefinidas.get((String) arg); workingWithFunc.correrFuncionLocal(); break;    
+
+	case VEERCANIADIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalVeer((int) arg); break;
+	case VEERC: if ((int) arg == 1) {world.turnRight();world.turnRight();world.turnRight(); } else if ((int) arg == 0) { world.turnRight(); } else if ((int) arg == 2) { world.turnRight();world.turnRight(); }; break;
+
+	case STEPA: workingWithFunc = funcionesDefinidas.get((String) value);
+	if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+	else { stringToValue = (int) arg; };
+	{ world.moveForward((int) stringToValue, false); } break;
+	case STEPANIADIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalStep((Object) arg, (Object) value); break;
+
+
+	case LOOKO: if ((int) arg == 0) { if ((Boolean) world.facingSouth() == true) { world.turnRight();world.turnRight(); } else if ((Boolean) world.facingEast() == true) { world.turnRight();world.turnRight();world.turnRight(); } else if ((Boolean) world.facingWest() == true) {world.turnRight(); } }
+	else if ((int) arg == 1) { if((Boolean) world.facingNorth() == true) { world.turnRight();world.turnRight(); } else if ((Boolean) world.facingEast() == true) { world.turnRight(); } else if ((Boolean) world.facingWest() == true) { world.turnRight();world.turnRight();world.turnRight(); } }
+	else if ((int) arg == 2) { if((Boolean) world.facingNorth() == true) { world.turnRight(); } else if ((Boolean) world.facingSouth() == true) { world.turnRight();world.turnRight();world.turnRight(); } else if ((Boolean) world.facingWest() == true) { world.turnRight();world.turnRight(); } }
+	else if ((int) arg == 3) { if((Boolean) world.facingNorth() == true) { world.turnRight();world.turnRight();world.turnRight(); } else if ((Boolean) world.facingSouth() == true) { world.turnRight(); } else if ((Boolean) world.facingEast() == true) { world.turnRight();world.turnRight(); } };
+	break;
+	case LOOKODIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalLook((int) arg); break;
+
+	case DROPN: workingWithFunc = funcionesDefinidas.get((String) value);
+	if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+	else { stringToValue = (int) arg; };
+	{ world.putChips((int) stringToValue); } break;
+	case DROPNDIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalDrop((Object) arg); break;
+
+
+	case LOOPREPEATADDLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalRepeat((Object) arg, (Object) value2); break;
+	case LOOPREPEAT: int i = 0; while (i < (int) arg) { workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.correrFuncionLocal(); i += 1; } break;
+
+	case CONDITIONALISFACING: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalConditionalFacing((Object) arg, value); break;
+	case CONDITIONALISFACINGLOCAL: workingWithFunc = funcionesDefinidas.get((String) value);
+	if ((int) arg == 0) { workingWithFunc.changeOptionCheckCondition(world.facingNorth()); }
+	else if ((int) arg == 1) { workingWithFunc.changeOptionCheckCondition(world.facingSouth()); } 
+	else if ((int) arg == 2) { workingWithFunc.changeOptionCheckCondition(world.facingEast()); }
+	else if ((int) arg == 3) { workingWithFunc.changeOptionCheckCondition(world.facingWest()); };
+	break;
+
+	case CONDITIONALCANWALK: workingWithFunc = funcionesDefinidas.get((String) value2); workingWithFunc.agregarInstruccionLocalCanWalk((Object) arg, value, value2); break;
+	case CONDITIONALCANWALKLOCAL: workingWithFunc = funcionesDefinidas.get((String) value2);
+	Point valorPunto = world.getPosition();
+	if ((int) value == 0) { workingWithFunc.changeOptionCheckCondition(world.blockedInRange((int) valorPunto.getX(), (int) valorPunto.getY(), (int) arg, 0)); }
+	else if ((int) value == 1) { workingWithFunc.changeOptionCheckCondition(world.blockedInRange((int) valorPunto.getX(), (int) valorPunto.getY(), (int) arg, 1)); } 
+	else if ((int) value == 2) { workingWithFunc.changeOptionCheckCondition(world.blockedInRange((int) valorPunto.getX(), (int) valorPunto.getY(), (int) arg, 2)); }
+	else if ((int) value == 3) { workingWithFunc.changeOptionCheckCondition(world.blockedInRange((int) valorPunto.getX(), (int) valorPunto.getY(), (int) arg, 3)); };
+	break;
+
+	case CONDICIONALESIFADDLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalIfStatement(arg, value); break;
+	case CONDICIONALESIF: CodeBlock workingWithFuncInstruccion = funcionesDefinidas.get((String) arg); CodeBlock workingWithFuncPrincipal = funcionesDefinidas.get((String) value); if (workingWithFuncPrincipal.checkCondition == true) { workingWithFuncInstruccion.correrFuncionLocal(); } else { System.out.println("valido"); }  break;
+
+	case CONDICIONALESWHILEADDLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalWhileStatement(arg, value2); break;
+	case CONDICIONALESWHILE: workingWithFunc = funcionesDefinidas.get((String) arg);
+	if ((int) value == 0) { while (world.facingNorth() == true) { workingWithFunc.correrFuncionLocal(); } }
+	else if ((int) value == 1) { while (world.facingSouth() == true) { workingWithFunc.correrFuncionLocal(); } }
+	else if ((int) value == 2) { while (world.facingEast() == true) { workingWithFunc.correrFuncionLocal(); } }
+	else if ((int) value == 3) { while (world.facingWest() == true) { workingWithFunc.correrFuncionLocal(); } };
+	break;
+
+	case NOTADDLOCAL: workingWithFunc = funcionesDefinidas.get((String) arg); workingWithFunc.agregarInstruccionLocalNOT(arg); break;
+	case NOTRUN: workingWithFunc = funcionesDefinidas.get((String) arg);
+	if ( workingWithFunc.checkCondition == true) { workingWithFunc.changeOptionCheckCondition(false);  }
+	else if (workingWithFunc.checkCondition == false) { workingWithFunc.changeOptionCheckCondition(true); } ; break;
+
+
+	case DMOVEALOCAL: workingWithFunc = funcionesDefinidas.get((String) value2); workingWithFunc.agregarInstruccionLocalDMOVE(arg, value, value2); break;
+	case DMOVEA: workingWithFunc = funcionesDefinidas.get((String) value2);
+	if( value instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) value); }
+	else { stringToValue = (int) value; };
+
+	int valueLado = world.getFacing();
+	
+	if ((int) arg == 0) { world.moveForward((int) stringToValue, false); }
+	else if ((int) arg == 1) { world.turnRight(); world.moveForward((int) stringToValue, false); }
+	else if ((int) arg == 2) { world.turnRight();world.turnRight();world.turnRight(); world.moveForward((int) stringToValue, false); }
+	else if ((int) arg == 3) { world.turnRight();world.turnRight(); world.moveForward((int) stringToValue, false); };
+
+	if (valueLado == 0) { while (world.facingNorth() != true) { world.turnRight(); } }
+	else if (valueLado == 1) {  while (world.facingSouth() != true) { world.turnRight(); }  }
+	else if (valueLado == 2) { while (world.facingEast() != true) { world.turnRight(); } }
+	else if (valueLado == 3) { while (world.facingWest() != true) { world.turnRight(); } };
+	break;
+
+	case CONDITIONALISVALIDLOCAL: workingWithFunc = funcionesDefinidas.get((String) value2); workingWithFunc.agregarInstruccionLocalINSTRUCCIONISVALID(arg, value, value2); break;
+	case CONDITIONALISVALID: workingWithFunc = funcionesDefinidas.get((String) value2);
+	if( value instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) value); }
+	else { stringToValue = (int) value; };
+
+	boolean result = false; 
+	if ((int) arg == 0) {if ((int) value <= world.countBalloons()) { result = true; } workingWithFunc.changeOptionCheckCondition(result); }
+	else if ((int) arg == 1) {if ((int) value <= world.countBalloons()) { result = true; } workingWithFunc.changeOptionCheckCondition(result); } 
+	else if ((int) arg == 2) {if ((int) value <= world.countBalloons()) { result = true; } workingWithFunc.changeOptionCheckCondition(result); }
+	else if ((int) arg == 3) {if ((int) value <= world.getMyBalloons()) { result = true; } workingWithFunc.changeOptionCheckCondition(result); }
+	else if ((int) arg == 4) {if ((int) value <= world.getMyChips()) { result = true; } workingWithFunc.changeOptionCheckCondition(result); };
+	break;
+
+	case JUMPN: workingWithFunc = funcionesDefinidas.get((String) value);
+    if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+    else { stringToValue = (int) arg; };
+    { world.moveForward((int) stringToValue, true); } break;
+    case JUMPNIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalJump((Object) arg, (Object) value); break;
+
+case GRABN: workingWithFunc = funcionesDefinidas.get((String) value);
+    if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+    else { stringToValue = (int) arg; };
+    { world.grabBalloons((int) stringToValue); } break;
+case GRABNLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalGRAB((Object) arg, value); break;
+
+case GETNDIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalGET((Object) arg, value); break;
+case GETN: workingWithFunc = funcionesDefinidas.get((String) value);
+    if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+    else { stringToValue = (int) arg; };
+    { world.pickChips((int) stringToValue); } break;
+
+case FREENDIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalFREE((Object) arg, value); break;
+case FREEN: workingWithFunc = funcionesDefinidas.get((String) value);
+    if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+    else { stringToValue = (int) arg; };
+    { world.putBalloons((int) stringToValue); } break;
+
+case POPNDIRLOCAL: workingWithFunc = funcionesDefinidas.get((String) value); workingWithFunc.agregarInstruccionLocalPOPN((Object) arg, value); break;
+case POPN: workingWithFunc = funcionesDefinidas.get((String) value);
+    if( arg instanceof String ) { stringToValue = workingWithFunc.getValueFromString((Object) arg); }
+    else { stringToValue = (int) arg; };
+    { world.popBalloons((int) stringToValue); } break;
+
+
+
+
+	// TERMINA TRABAJO
+	}
+}
+
+public String toString() {
+  if (arg==null)
+	return  "      "+names[type] + "\n";
+  else
+	return  "      "+ names[type] + "  "+  arg + "\n";
+  }
+}
+
+
+}
+PARSER_END(Robot)
+
+SKIP:
+{
+	" "
+	|	"\r"
+	|	"\t"
+	| "\n"
+}
+
+TOKEN: /* tockens extras PROGRAMA */
+{
+  <INICIOPROGRAMA: "PROG" >
+| <FINALIZAPROGRAMA: "GORP" >
+| <VAR: "var" >
+| <INICIOFUNCION: "PROC" >
+| <FINALIZAFUNCION: "CORP" >
+| <IF: "if" >
+| <ELSE: "else" >
+| <FINALIZAOCONDICIONAL: "fi" >
+| <WHILE: "while" >
+| <WHILEDO: "do" >
+| <WHILEOD: "od" >
+| <REPEAT: "repeatTimes" >
+| <REPEATPER: "per" >
+| <LOOKA: "look" >
+| < DROPZ: "drop" >
+| < DMOVEZ: "Dmove" >
+| < FREE: "free" >
+| < JUMP: "jump" >
+| < JUMPTO: "jumpTo" >
+| < GET: "get" >
+
+| < GRAB: "grab" >
+| < OMOVEZ: "Omove" >
+
+| <FRONT: "front" >
+| <BACK: "back" >
+| <LEFT: "left" >
+| <AROUND: "around" >
+
+| <VEER: "veer" >
+| <STEPMOVE: "step" >
+| < WRITE: "write" >
+
+//conditionals
+| <ISFACING: "isfacing" >
+| <ISVALID: "isValid" >
+| <CANMOVE: "canMove" >
+| <NOT: "not" >
+
+| <NORTH: "north" >
+| <SOUTH: "south" >
+| <EAST: "east" >
+| <WEST: "west" >
+}
+
+
+TOKEN: /* Nombres de Comandos */
+{
+
+			<MOV:  "move">
+		| 	<RIGHT: "right">
+		| 	<PUT: "Put">
+		| 	<PICK: "Pick">
+		|  < POP: "Pop" >
+		|  <GO: "Go" >
+        |  < HOP:  "Hop" >		
+
+}
+
+TOKEN:
+{
+		<BALLOONS:  "BALLOONS" >
+		|	<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
+TOKEN :
+{
+		<NUM: (<DIGIT>)+ >
+		|  	<#DIGIT: ["0"-"9"] >
+		| < #LETTER : [ "A"-"Z" ] >
+// cambio
+| < VARNAME :  <LETTER > (< LETTER >| < DIGIT >)* >
+}
+
+
+
+	//boolean command(uniandes.lym.robot.view.Console sistema) :
+	boolean command(Console sistema):
+	{	
+		
+		int x,y;
+		salida=new String();
+		// variable
+		Object pos; Object functionName; int r=0;
+		CodeBlock WorkingOnFunction;
+	}
+
+	
+	{
+		(
+(  
+		(
+		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
+		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
+		|  <PUT> "("  put() ")"					  			
+		|  <PICK> "(" get()  ")"	
+	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		) ";"
+|
+		(
+		  < INICIOPROGRAMA >
+		  [
+		  < VAR > pos = variable() {code.add(new CodeBlock(PUSHVARGLOBAL,pos));} ("," pos = variable()  {code.add(new CodeBlock(PUSHVARGLOBAL,pos));})*";"
+		  ]
+		  
+			(
+			  < INICIOFUNCION >
+			  functionName = variable() { code.add(new CodeBlock(INICIALIZAR, functionName)); }
+			  "("
+			  [pos = variable()  {code.add(new CodeBlock(PUSHVARLOCAL, functionName, pos));} ("," pos = variable()  {code.add(new CodeBlock(PUSHVARLOCAL, functionName, pos));})*]
+			  ")"
+			  cuerpoDePrograma(functionName)
+			  < FINALIZAFUNCION >			)*
+			
+		
+		(		 	"{"
+		 	  ((LOOKAHEAD(2) (pos = variable() "=" r = num() { code.add(new CodeBlock(ASIGNARVARGLOBAL, pos, r)); })
+		 	| (functionName = variable() "("
+		 	[pos = num() {code.add(new CodeBlock(VARIABLESPRECORRER, functionName, pos));} ("," pos = num()  {code.add(new CodeBlock(VARIABLESPRECORRER, functionName,pos));})*]
+		 	 ")" { code.add(new CodeBlock(CORRERFUNCION, functionName)); }) // aca empieza a correr la funcion
+		 	)
+		 	  )
+
+		 	(
+		 	  ";"
+		 	  (LOOKAHEAD(2) (pos = variable() "=" r = num() { code.add(new CodeBlock(ASIGNARVARGLOBAL, pos, r)); })
+		 	| (functionName = variable() "("
+		 	// AQUI ASIGNAMOS VARIABLES
+		 	[pos = num() {code.add(new CodeBlock(VARIABLESPRECORRER, functionName, pos));} ("," pos = num()  {code.add(new CodeBlock(VARIABLESPRECORRER, functionName,pos));})*]
+		 	")" { code.add(new CodeBlock(CORRERFUNCION, functionName)); })
+		 	)		 	)*
+			"}"
+		)
+		
+		  < FINALIZAPROGRAMA >
+
+
+
+
+      {
+        System.out.println("Executing:");
+
+        System.out.println(code);
+
+		Iterator <CodeBlock > iCodeBlock = code.iterator();
+		while (iCodeBlock.hasNext()) {
+        	CodeBlock i = iCodeBlock.next();
+        	//try {
+        	  i.execute();
+        	  //} catch (Error e) { System.out.println (e); break; }  
+		}
+		code.clear();
+		}		)
+)
+
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		})+
+
+    	| <EOF> {return false;} 
+	}
+
+	/* DEFINICION DE FUNCIONES */
+// NUEVAS
+	void cuerpoDePrograma(Object functionName) :
+	{Object value; Object value2; CodeBlock CodeBlockesito = new CodeBlock(); String valueReturn;}
+	{
+	  "{"
+	  (
+	    < VEER > "(" ((< LEFT > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 1, functionName));}) | ( < RIGHT > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 0, functionName));}) | (< AROUND > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 2, functionName));})) ")"
+	  | < STEPMOVE > "(" value = varValue() {code.add(new CodeBlock(STEPANIADIRLOCAL, (Object) value, functionName));} ")"
+	  | < LOOKA > "(" ((< NORTH > {code.add(new CodeBlock(LOOKODIRLOCAL, 0, functionName));}) | (< SOUTH > {code.add(new CodeBlock(LOOKODIRLOCAL, 1, functionName));}) | (< EAST > {code.add(new CodeBlock(LOOKODIRLOCAL, 2, functionName));}) | (< WEST > {code.add(new CodeBlock(LOOKODIRLOCAL, 3, functionName));})) ")"
+	  |  < DROPZ > "(" value = varValue() {code.add(new CodeBlock(DROPNDIRLOCAL, (Object) value, functionName));} ")"
+	  | < JUMP > "(" value = varValue() {code.add(new CodeBlock(JUMPNIRLOCAL, (Object) value, functionName));} ")"
+	  |  < GRAB > "(" value = varValue() {code.add(new CodeBlock(GRABNLOCAL, (Object) value, functionName));} ")"
+	  |  < GET > "(" value = varValue() {code.add(new CodeBlock(GETNDIRLOCAL, (Object) value, functionName));} ")"
+	  |  < FREE > "(" value = varValue() {code.add(new CodeBlock(FREENDIRLOCAL, (Object) value, functionName));} ")"
+	  | < POP > "(" value = varValue() {code.add(new CodeBlock(POPNDIRLOCAL, (Object) value, functionName));} ")"
+	  | < DMOVEZ > "(" value = varValue() ","
+	  (
+	    (< FRONT > { code.add(new CodeBlock(DMOVEALOCAL, 0, value, functionName));  })
+	  | (< RIGHT > { code.add(new CodeBlock(DMOVEALOCAL, 1, value, functionName)); })
+	  | (< LEFT > { code.add(new CodeBlock(DMOVEALOCAL, 2, value, functionName)); })
+	  | (< BACK > { code.add(new CodeBlock(DMOVEALOCAL, 3, value, functionName)); })
+	    )
+	  ")"
+	| < JUMPTO > "(" value = varValue() value2 = varValue() ")"
+	  | < OMOVEZ > "(" value = varValue() ","
+	  (
+	    (< NORTH > )
+	  | (< SOUTH > )
+	  | (< EAST > )
+	  | (< WEST > )
+	    )
+	  ")"
+	  | < REPEAT > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } value = varValue() cuerpoDePrograma((Object) valueReturn) {code.add(new CodeBlock(LOOPREPEATADDLOCAL, value, functionName, valueReturn));}
+	  | < IF > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } "(" conditionals(functionName) ")" cuerpoDePrograma((Object) valueReturn) "fi" {code.add(new CodeBlock(CONDICIONALESIFADDLOCAL, valueReturn, functionName));}
+	  | < WHILE > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } "("
+	  < ISFACING > "(" ((< NORTH >  { value = (Object) 0; }) | (< SOUTH >  { value = (Object) 1; }) | (< EAST >  { value = (Object) 2; }) | (< WEST > { value = (Object) 3; })) ")"
+ ")" < WHILEDO >
+ cuerpoDePrograma((Object) valueReturn) < WHILEOD > {code.add(new CodeBlock(CONDICIONALESWHILEADDLOCAL, valueReturn, functionName, value));}
+	  )
+	  (";"
+	  (	      < VEER > "(" ((< LEFT > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 1, functionName));}) | ( < RIGHT > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 0, functionName));}) | (< AROUND > {code.add(new CodeBlock(VEERCANIADIRLOCAL, 2, functionName));})) ")"
+	  | < STEPMOVE > "(" value = varValue() {code.add(new CodeBlock(STEPANIADIRLOCAL, (Object) value, functionName));} ")"
+	  | < LOOKA > "(" ((< NORTH > {code.add(new CodeBlock(LOOKODIRLOCAL, 0, functionName));}) | (< SOUTH > {code.add(new CodeBlock(LOOKODIRLOCAL, 1, functionName));}) | (< EAST > {code.add(new CodeBlock(LOOKODIRLOCAL, 2, functionName));}) | (< WEST > {code.add(new CodeBlock(LOOKODIRLOCAL, 3, functionName));})) ")"
+	  |  < DROPZ > "(" value = varValue() {code.add(new CodeBlock(DROPNDIRLOCAL, (Object) value, functionName));} ")"
+	  | < JUMP > "(" value = varValue() {code.add(new CodeBlock(JUMPNIRLOCAL, (Object) value, functionName));} ")"
+	  |  < GRAB > "(" value = varValue() {code.add(new CodeBlock(GRABNLOCAL, (Object) value, functionName));} ")"
+	  |  < GET > "(" value = varValue() {code.add(new CodeBlock(GETNDIRLOCAL, (Object) value, functionName));} ")"
+	  |  < FREE > "(" value = varValue() {code.add(new CodeBlock(FREENDIRLOCAL, (Object) value, functionName));} ")"
+	  | < POP > "(" value = varValue() {code.add(new CodeBlock(POPNDIRLOCAL, (Object) value, functionName));} ")"
+	  | < DMOVEZ > "(" value = varValue() ","
+	  (
+	    (< FRONT > { code.add(new CodeBlock(DMOVEALOCAL, 0, value, functionName));  })
+	  | (< RIGHT > { code.add(new CodeBlock(DMOVEALOCAL, 1, value, functionName)); })
+	  | (< LEFT > { code.add(new CodeBlock(DMOVEALOCAL, 2, value, functionName)); })
+	  | (< BACK > { code.add(new CodeBlock(DMOVEALOCAL, 3, value, functionName)); })
+	    )
+	  ")"
+	| < JUMPTO > "(" value = varValue() value2 = varValue() ")"
+	  | < OMOVEZ > "(" value = varValue() ","
+	  (
+	    (< NORTH > )
+	  | (< SOUTH > )
+	  | (< EAST > )
+	  | (< WEST > )
+	    )
+	  ")"
+	  | < REPEAT > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } value = varValue() cuerpoDePrograma((Object) valueReturn) {code.add(new CodeBlock(LOOPREPEATADDLOCAL, value, functionName, valueReturn));}
+	  | < IF > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } "(" conditionals(functionName) ")" cuerpoDePrograma((Object) valueReturn) "fi" {code.add(new CodeBlock(CONDICIONALESIFADDLOCAL, valueReturn, functionName));}
+	  | < WHILE > { valueReturn = CodeBlockesito.generateRandomPassword(); } { code.add(new CodeBlock(INICIALIZAR, valueReturn)); } "("
+	  < ISFACING > "(" ((< NORTH >  { value = (Object) 0; }) | (< SOUTH >  { value = (Object) 1; }) | (< EAST >  { value = (Object) 2; }) | (< WEST > { value = (Object) 3; })) ")"
+ ")" < WHILEDO >
+ cuerpoDePrograma((Object) valueReturn) < WHILEOD > {code.add(new CodeBlock(CONDICIONALESWHILEADDLOCAL, valueReturn, functionName, value));}
+	))*
+	  "}"
+	}
+
+
+
+
+	int conditionalsprueba(Object functionName) :
+	{int localVar;}
+	{
+  (
+    < ISFACING > "(" (
+    (< NORTH > {return 0; })
+    | (< SOUTH > {return 1; })
+    | (< EAST > {return 2; })
+    | (< WEST > {return 3; })
+    )) ")"
+	}
+
+
+
+
+	void conditionals(Object functionName) :
+	{int n; int option; Object resultVarValue;}
+	{
+  (
+    < ISFACING > "(" (
+    (< NORTH > {code.add(new CodeBlock(CONDITIONALISFACING,0, functionName));})
+    | (< SOUTH > {code.add(new CodeBlock(CONDITIONALISFACING,1, functionName));})
+    | (< EAST > {code.add(new CodeBlock(CONDITIONALISFACING,2, functionName));})
+    | (< WEST > {code.add(new CodeBlock(CONDITIONALISFACING,3, functionName));})
+    )
+    
+| < ISVALID > "(" ( // {code.add(new CodeBlock(CONDITIONALISVALIDLOCAL,3, functionName));}
+  (< GRAB > { option = 0; })
+| (< POP > { option = 1; })
+| (< PICK > { option = 2; })
+| (< FREE > { option = 3; })
+| (< DROPZ > { option = 4; })
+  ) "," resultVarValue = varValue() { code.add(new CodeBlock(CONDITIONALISVALIDLOCAL, (Object) option, (Object) resultVarValue, (Object) functionName)); }
+  
+| < CANMOVE > "(" n = num() "," (
+    (< NORTH > {code.add(new CodeBlock(CONDITIONALCANWALK, n, 0, functionName));})
+    | (< SOUTH > {code.add(new CodeBlock(CONDITIONALCANWALK, n, 1, functionName));})
+    | (< EAST > {code.add(new CodeBlock(CONDITIONALCANWALK, n, 2, functionName));})
+    | (< WEST > {code.add(new CodeBlock(CONDITIONALCANWALK, n, 3, functionName));})
+    )
+| < NOT > "(" 
+(
+  < ISFACING > "(" (
+    (< NORTH > {code.add(new CodeBlock(CONDITIONALISFACING,0, functionName)); code.add(new CodeBlock(NOTADDLOCAL, functionName));})
+    | (< SOUTH > {code.add(new CodeBlock(CONDITIONALISFACING,1, functionName)); code.add(new CodeBlock(NOTADDLOCAL, functionName));})
+    | (< EAST > {code.add(new CodeBlock(CONDITIONALISFACING,2, functionName)); code.add(new CodeBlock(NOTADDLOCAL, functionName));})
+    | (< WEST > {code.add(new CodeBlock(CONDITIONALISFACING,3, functionName)); code.add(new CodeBlock(NOTADDLOCAL, functionName));})
+    )
+| < ISVALID > "("
+| < CANMOVE > "("
+)
+")"
+)
+
+")"
+	}
+
+
+	Object varValue() :
+	{String varString; int varInt;}
+	{
+		(
+		  (
+		    varString = variable() { return (Object) varString; }
+		    
+		  )
+		| 
+		  (
+		    varInt = num(){ return (Object) varInt; }
+		  )
+		)
+	}
+
+		/* DEFAULT */
+	void put() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
+		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
+	}
+
+
+	void get() :
+	{
+		int f=1;	
+	}
+	{
+		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
+		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
+	}
+	
+
+	/**
+	 * Unsigned decimal number
+	 * @return the corresponding value of the string
+	 * @error  corresponding value is too large
+	 */
+
+	int num() throws Error:
+	{	
+		int total=1;
+	}
+	{
+		<NUM>
+		{
+			try 
+			{
+				total = Integer.parseInt(token.image);
+			} 
+			catch (NumberFormatException ee) 
+			{
+				throw new Error("Number out of bounds: "+token.image+" !!");
+			}
+			return total;
+		}
+	}
+
+	String variable() throws Error:
+	{	
+		Token token;
+	}
+	
+	{
+		(token=<VARNAME>)
+	
+		  
+	{
+	  return token.image;
+	}   
+	}
+

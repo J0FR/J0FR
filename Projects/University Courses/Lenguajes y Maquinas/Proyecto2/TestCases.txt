@@ -1,0 +1,11 @@
+a bb ccc ddd abcdefg xyzxyzxyzxyzdddd gh$
+a###1*bb##1*ccc#1*ddd#1*abcd@efg#2*xyzx@yzxy@zxyz@dddd1*gh##1$
+
+try a long word abcdefghijklmnopqrstuuvwxyz aha$
+try#1*a###1*long1*word1*abcd@efgh@ijkl@mnop@qrst@uuvw@xyz#1*aha#1$
+
+prueba projecto decoder aleatoriedad aguantejuniordequilla$
+prue@ba##2*proj@ecto2*deco@der#2*alea@tori@edad0*agua@ntej@unio@rdeq@uill@a## 
+
+en busqueda delmodulotresquedecero$
+en##1*busq@ueda2*delm@odul@otre@sque@dece@ro##0$

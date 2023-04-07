@@ -1,0 +1,544 @@
+using gold.**
+
+toSet(C) :=  {x|  x in C}
+
+///====   mini Parser===
+
+function createParser(A):IPushdownAutomaton begin
+	Q:=(0‥3)∪(700‥810)∪{999,900,901,902,903,1000,99,100,101,102,103,104,199, 105, 106,109}∪(500‥610)∪(100‥299)
+	Σ:=toSet(A)  ∪ {' ', '\n'}
+	
+	Γ:={'1', '2', '3', '4', '5'}
+	q₀:=0
+	F:= {1000}
+	M:=GPushdownAutomaton(Q,Σ,Γ,q₀,F)
+SkipChars := {' ', '\n'}   // this will only  be used when testing only the parser as the lexer removes  SkipChars
+
+// VAR
+M.delta(0,1,'I').ignore()
+M.delta(1,2,'V').ignore()
+M.delta(2,3,'S').ignore()
+M.delta(2,3,'s').ignore()
+M.delta(3,2,',').ignore()
+M.delta(3,99,';').ignore() // OPCION BLOCK OF INSTRUCTIONS
+
+M.delta(1,99,λ).ignore() // definicion funcion
+
+M.delta(99,900,'{').ignore() // DE INTERSECCION FUNCIONES Y BLOCK OF INSTRUCTIONS
+M.delta(99,100,'F').ignore()
+
+// FUNCIONES
+M.delta(100,101,'s').ignore()
+M.delta(100,101,'S').ignore()
+M.delta(101,102,'(').ignore()
+M.delta(101,109,'(').ignore()
+M.delta(109,104,')').ignore()
+M.delta(102,103,'s').ignore()
+M.delta(102,103,'S').ignore()
+M.delta(103,102,',').ignore()
+M.delta(103,104,')').ignore()
+
+M.delta(104,105,'{').ignore() // 105 CUERPO
+M.delta(104,108,'{').ignore()
+
+⧐M.delta(105,199,'}').pop("4")
+M.delta(106,199,'}').ignore()
+M.delta(108,199,'}').ignore()
+M.delta(199,99,'f').ignore()
+
+
+⧐//IF WHILE STATEMENT 200-299
+M.delta(105,201,'C').push("22")
+M.delta(105,201,'W').push("33")
+M.delta(105,205,'R').push("5") // repeat
+M.delta(105,204,'E').pop("2") // else
+M.delta(201,202,'(').ignore()
+M.delta(205,204,'#').ignore()
+M.delta(203,203,')').pop("1")
+M.delta(203,204,'w').pop("3")
+
+
+
+M.delta(208,204,'E').pop("2") // else
+	
+M.delta(105,208,'}').pop("4")
+M.delta(208,209,'y').pop("5") // repeat
+M.delta(208,209,'z').pop("2")
+M.delta(208,209,'z').pop("22") // else
+M.delta(208,209,'Z').pop("3")
+M.delta(209,208,'}').pop("4")
+M.delta(209,210,';').ignore()
+
+M.delta(105,206,λ).ignore()
+M.delta(207,208,'}').pop("4")
+M.delta(207,210,';').ignore()
+
+M.delta(210,206,λ).ignore()
+M.delta(210,205,'R').push("5") // repeat
+M.delta(210,201,'C').push("22")
+M.delta(210,201,'W').push("33")
+
+M.delta(207,106,λ).ignore()
+M.delta(209,106,λ).ignore()
+
+M.delta(203,105,'{').push("4")
+M.delta(204,105,'{').push("4")
+
+	// isFacing 220-230
+M.delta(202,220,'U').ignore()
+M.delta(220,221,'(').ignore()
+M.delta(221,222,'n').ignore()
+M.delta(221,222,'o').ignore()
+M.delta(221,222,'e').ignore()
+M.delta(221,222,'d').ignore()
+M.delta(222,223,')').ignore()
+M.delta(223,203,')').ignore()
+	
+	
+	// isValid 230 - 240
+M.delta(202,230,'u').ignore()
+M.delta(230,231,'(').ignore()
+M.delta(231,232,'K').ignore()
+M.delta(231,232,'J').ignore()
+M.delta(231,232,'G').ignore()
+M.delta(231,232,'P').ignore()
+M.delta(231,232,'g').ignore()
+M.delta(231,232,'Q').ignore()
+M.delta(231,232,'D').ignore()
+M.delta(232,233,',').ignore()
+M.delta(233,234,'s').ignore()
+M.delta(233,234,'S').ignore()
+M.delta(233,234,'#').ignore()
+M.delta(234,235,')').ignore()
+M.delta(235,203,')').ignore()
+	
+	// canWalk 240 - 250
+M.delta(202,240,'c').ignore()
+M.delta(240,241,'(').ignore()
+M.delta(241,242,'n').ignore()
+M.delta(241,242,'o').ignore()
+M.delta(241,242,'e').ignore()
+M.delta(241,242,'d').ignore()
+M.delta(241,242,'r').ignore()
+M.delta(241,242,'l').ignore()
+M.delta(241,242,'t').ignore()
+M.delta(241,242,'b').ignore()
+M.delta(242,243,',').ignore()
+M.delta(243,244,'s').ignore()
+M.delta(243,244,'S').ignore()
+M.delta(243,244,'#').ignore()
+M.delta(244,245,')').ignore()
+M.delta(245,203,')').ignore()
+	
+	// not 250 - 260
+M.delta(202,250,'N').push("1")
+M.delta(250,251,'(').ignore()
+M.delta(251,250,'N').push("1")
+M.delta(251,220,'U').ignore()
+M.delta(251,230,'u').ignore()
+M.delta(251,240,'c').ignore()
+
+// FUNCIONES BLOCK OF INSTRUCTIONS 500-610
+
+	// WALK IF
+M.delta(206,500,'K').ignore()
+M.delta(500,501,'(').ignore()
+M.delta(501,502,'t').ignore()
+M.delta(501,502,'r').ignore()
+M.delta(501,502,'l').ignore()
+M.delta(501,502,'b').ignore()
+M.delta(501,502,'n').ignore()
+M.delta(501,502,'o').ignore()
+M.delta(501,502,'e').ignore()
+M.delta(501,502,'d').ignore()
+M.delta(502,503,',').ignore()
+M.delta(503,504,'#').ignore()
+M.delta(503,504,'s').ignore()
+M.delta(503,504,'S').ignore()
+M.delta(501,504,'#').ignore()
+M.delta(501,504,'s').ignore()
+M.delta(501,504,'S').ignore()
+M.delta(504,505,')').ignore()
+M.delta(505,207,λ).ignore()
+
+	// JUMP
+M.delta(206,510,'J').ignore()
+M.delta(510,511,'(').ignore()
+M.delta(511,512,'s').ignore()
+M.delta(511,512,'S').ignore()
+M.delta(511,512,'#').ignore()
+M.delta(512,513,')').ignore()
+M.delta(513,207,λ).ignore()
+
+	// JUMPTO
+M.delta(206,520,'T').ignore()
+M.delta(520,521,'(').ignore()
+M.delta(521,522,'s').ignore()
+M.delta(521,522,'S').ignore()
+M.delta(521,522,'#').ignore()
+M.delta(522,523,',').ignore()
+M.delta(523,524,'s').ignore()
+M.delta(523,524,'S').ignore()
+M.delta(523,524,'#').ignore()
+M.delta(524,525,')').ignore()
+M.delta(525,207,λ).ignore()
+
+	// VEER
+M.delta(206,530,'v').ignore()
+M.delta(530,531,'(').ignore()
+M.delta(531,532,'r').ignore()
+M.delta(531,532,'l').ignore()
+M.delta(531,532,'a').ignore()
+M.delta(532,533,')').ignore()
+M.delta(533,207,λ).ignore()
+
+	// LOOK
+M.delta(206,540,'k').ignore()
+M.delta(540,541,'(').ignore()
+M.delta(541,542,'n').ignore()
+M.delta(541,542,'o').ignore()
+M.delta(541,542,'e').ignore()
+M.delta(541,542,'d').ignore()
+M.delta(542,543,')').ignore()
+M.delta(543,207,λ).ignore()
+
+	// DROP
+M.delta(206,550,'D').ignore()
+M.delta(550,551,'(').ignore()
+M.delta(551,552,'s').ignore()
+M.delta(551,552,'S').ignore()
+M.delta(551,552,'#').ignore()
+M.delta(552,553,')').ignore()
+M.delta(553,207,λ).ignore()
+
+	// GRAB
+M.delta(206,560,'G').ignore()
+M.delta(560,561,'(').ignore()
+M.delta(561,562,'s').ignore()
+M.delta(561,562,'S').ignore()
+M.delta(561,562,'#').ignore()
+M.delta(562,563,')').ignore()
+M.delta(563,207,λ).ignore()
+
+	// GET
+M.delta(206,570,'g').ignore()
+M.delta(570,571,'(').ignore()
+M.delta(571,572,'s').ignore()
+M.delta(571,572,'S').ignore()
+M.delta(571,572,'#').ignore()
+M.delta(572,573,')').ignore()
+M.delta(573,207,λ).ignore()
+
+	// FREE
+M.delta(206,580,'Q').ignore()
+M.delta(580,581,'(').ignore()
+M.delta(581,582,'s').ignore()
+M.delta(581,582,'S').ignore()
+M.delta(581,582,'#').ignore()
+M.delta(582,583,')').ignore()
+M.delta(583,207,λ).ignore()
+
+	// POP
+M.delta(206,590,'P').ignore()
+M.delta(590,591,'(').ignore()
+M.delta(591,592,'s').ignore()
+M.delta(591,592,'S').ignore()
+M.delta(591,592,'#').ignore()
+M.delta(592,593,')').ignore()
+M.delta(593,207,λ).ignore()
+
+	// FUNCIONES 
+M.delta(206,600,'s').ignore()
+M.delta(105,600,'S').ignore()
+M.delta(600,601,'(').ignore()
+M.delta(600,604,'(').ignore()
+M.delta(601,602,'s').ignore()
+M.delta(601,602,'S').ignore()
+M.delta(601,602,'#').ignore()
+M.delta(602,601,',').ignore()
+M.delta(602,603,')').ignore()
+M.delta(604,603,')').ignore()
+M.delta(603,207,λ).ignore()
+
+
+
+
+
+
+
+
+// BLOCK OF INSTRUCTIONS 900-999
+M.delta(900,901,'s').ignore()
+M.delta(900,901,'S').ignore()
+M.delta(901,902,'A').ignore()
+M.delta(902,903,'#').ignore()
+M.delta(903,900,';').ignore()
+M.delta(903,999,'}').ignore()
+
+M.delta(999,1000,'i').ignore() // GORP FINALIZAR
+
+// FUNCIONES PARA BLOCK OF INSTRUCTIONS 700-810
+
+	// WALK IF
+M.delta(900,700,'K').ignore()
+M.delta(700,701,'(').ignore()
+M.delta(701,702,'t').ignore()
+M.delta(701,702,'r').ignore()
+M.delta(701,702,'l').ignore()
+M.delta(701,702,'b').ignore()
+M.delta(701,702,'n').ignore()
+M.delta(701,702,'o').ignore()
+M.delta(701,702,'e').ignore()
+M.delta(701,702,'d').ignore()
+M.delta(702,703,',').ignore()
+M.delta(703,704,'#').ignore()
+M.delta(703,704,'s').ignore()
+M.delta(703,704,'S').ignore()
+M.delta(701,704,'#').ignore()
+M.delta(701,704,'s').ignore()
+M.delta(701,704,'S').ignore()
+M.delta(704,705,')').ignore()
+M.delta(705,900,';').ignore()
+M.delta(705,999,'}').ignore()
+
+	// JUMP
+M.delta(900,710,'J').ignore()
+M.delta(710,711,'(').ignore()
+M.delta(711,712,'s').ignore()
+M.delta(711,712,'S').ignore()
+M.delta(711,712,'#').ignore()
+M.delta(712,713,')').ignore()
+M.delta(713,900,';').ignore()
+M.delta(713,999,'}').ignore()
+
+	// JUMPTO
+M.delta(900,720,'T').ignore()
+M.delta(720,721,'(').ignore()
+M.delta(721,722,'s').ignore()
+M.delta(721,722,'S').ignore()
+M.delta(721,722,'#').ignore()
+M.delta(722,723,',').ignore()
+M.delta(723,724,'s').ignore()
+M.delta(723,724,'S').ignore()
+M.delta(723,724,'#').ignore()
+M.delta(724,725,')').ignore()
+M.delta(725,900,';').ignore()
+M.delta(725,999,'}').ignore()
+
+	// VEER
+M.delta(900,730,'v').ignore()
+M.delta(730,731,'(').ignore()
+M.delta(731,732,'r').ignore()
+M.delta(731,732,'l').ignore()
+M.delta(731,732,'a').ignore()
+M.delta(732,733,')').ignore()
+M.delta(733,900,';').ignore()
+M.delta(733,999,'}').ignore()
+
+	// LOOK
+M.delta(900,740,'k').ignore()
+M.delta(740,741,'(').ignore()
+M.delta(741,742,'n').ignore()
+M.delta(741,742,'o').ignore()
+M.delta(741,742,'e').ignore()
+M.delta(741,742,'d').ignore()
+M.delta(742,743,')').ignore()
+M.delta(743,900,';').ignore()
+M.delta(743,999,'}').ignore()
+
+	// DROP
+M.delta(900,750,'D').ignore()
+M.delta(750,751,'(').ignore()
+M.delta(751,752,'s').ignore()
+M.delta(751,752,'S').ignore()
+M.delta(751,752,'#').ignore()
+M.delta(752,753,')').ignore()
+M.delta(753,900,';').ignore()
+M.delta(753,999,'}').ignore()
+
+	// GRAB
+M.delta(900,760,'G').ignore()
+M.delta(760,761,'(').ignore()
+M.delta(761,762,'s').ignore()
+M.delta(761,762,'S').ignore()
+M.delta(761,762,'#').ignore()
+M.delta(762,763,')').ignore()
+M.delta(763,900,';').ignore()
+M.delta(763,999,'}').ignore()
+
+	// GET
+M.delta(900,770,'g').ignore()
+M.delta(770,771,'(').ignore()
+M.delta(771,772,'s').ignore()
+M.delta(771,772,'S').ignore()
+M.delta(771,772,'#').ignore()
+M.delta(772,773,')').ignore()
+M.delta(773,900,';').ignore()
+M.delta(773,999,'}').ignore()
+
+	// FREE
+M.delta(900,780,'Q').ignore()
+M.delta(780,781,'(').ignore()
+M.delta(781,782,'s').ignore()
+M.delta(781,782,'S').ignore()
+M.delta(781,782,'#').ignore()
+M.delta(782,783,')').ignore()
+M.delta(783,900,';').ignore()
+M.delta(783,999,'}').ignore()
+
+	// POP
+M.delta(900,790,'P').ignore()
+M.delta(790,791,'(').ignore()
+M.delta(791,792,'s').ignore()
+M.delta(791,792,'S').ignore()
+M.delta(791,792,'#').ignore()
+M.delta(792,793,')').ignore()
+M.delta(793,900,';').ignore()
+M.delta(793,999,'}').ignore()
+
+	// FUNCIONES 
+M.delta(900,800,'s').ignore()
+M.delta(900,800,'S').ignore()
+M.delta(800,801,'(').ignore()
+M.delta(800,804,'(').ignore()
+M.delta(801,802,'s').ignore()
+M.delta(801,802,'S').ignore()
+M.delta(801,802,'#').ignore()
+M.delta(802,801,',').ignore()
+M.delta(802,803,')').ignore()
+M.delta(804,803,')').ignore()
+M.delta(803,900,';').ignore()
+M.delta(803,999,'}').ignore()
+
+
+
+⧐// FUNCIONES PARA WHILE 200-310
+⧐
+⧐	// WALK IF
+⧐M.delta(99,200,'K').ignore()
+⧐M.delta(200,201,'(').ignore()
+⧐M.delta(201,202,'t').ignore()
+⧐M.delta(201,202,'r').ignore()
+⧐M.delta(201,202,'l').ignore()
+⧐M.delta(201,202,'b').ignore()
+⧐M.delta(201,202,'n').ignore()
+⧐M.delta(201,202,'o').ignore()
+⧐M.delta(201,202,'e').ignore()
+⧐M.delta(201,202,'d').ignore()
+⧐M.delta(202,203,',').ignore()
+⧐M.delta(203,204,'#').ignore()
+⧐M.delta(201,204,'#').ignore()
+⧐M.delta(204,205,')').ignore()
+⧐M.delta(205,99,';').ignore()
+⧐
+⧐	// JUMP
+⧐M.delta(99,210,'J').ignore()
+⧐M.delta(210,211,'(').ignore()
+⧐M.delta(211,212,'s').ignore()
+⧐M.delta(211,212,'S').ignore()
+⧐M.delta(211,212,'#').ignore()
+⧐M.delta(212,213,')').ignore()
+⧐M.delta(213,99,';').ignore()
+⧐
+⧐	// JUMPTO
+⧐M.delta(99,220,'T').ignore()
+⧐M.delta(220,221,'(').ignore()
+⧐M.delta(221,222,'s').ignore()
+⧐M.delta(221,222,'S').ignore()
+⧐M.delta(221,222,'#').ignore()
+⧐M.delta(222,223,',').ignore()
+⧐M.delta(223,224,'s').ignore()
+⧐M.delta(223,224,'S').ignore()
+⧐M.delta(223,224,'#').ignore()
+⧐M.delta(224,225,')').ignore()
+⧐M.delta(225,99,';').ignore()
+⧐
+⧐	// VEER
+⧐M.delta(99,230,'v').ignore()
+⧐M.delta(230,231,'(').ignore()
+⧐M.delta(231,232,'r').ignore()
+⧐M.delta(231,232,'l').ignore()
+⧐M.delta(231,232,'a').ignore()
+⧐M.delta(232,233,')').ignore()
+⧐M.delta(233,99,';').ignore()
+⧐
+⧐	// LOOK
+⧐M.delta(99,240,'k').ignore()
+⧐M.delta(240,241,'(').ignore()
+⧐M.delta(241,242,'n').ignore()
+⧐M.delta(241,242,'o').ignore()
+⧐M.delta(241,242,'e').ignore()
+⧐M.delta(241,242,'d').ignore()
+⧐M.delta(242,243,')').ignore()
+⧐M.delta(243,99,';').ignore()
+⧐
+⧐	// DROP
+⧐M.delta(99,250,'D').ignore()
+⧐M.delta(250,251,'(').ignore()
+⧐M.delta(251,252,'s').ignore()
+⧐M.delta(251,252,'S').ignore()
+⧐M.delta(251,252,'#').ignore()
+⧐M.delta(252,253,')').ignore()
+⧐M.delta(253,99,';').ignore()
+⧐
+⧐	// GRAB
+⧐M.delta(99,260,'G').ignore()
+⧐M.delta(260,261,'(').ignore()
+⧐M.delta(261,262,'s').ignore()
+⧐M.delta(261,262,'S').ignore()
+⧐M.delta(261,262,'#').ignore()
+⧐M.delta(262,263,')').ignore()
+⧐M.delta(263,99,';').ignore()
+⧐
+⧐	// GET
+⧐M.delta(99,270,'g').ignore()
+⧐M.delta(270,271,'(').ignore()
+⧐M.delta(271,272,'s').ignore()
+⧐M.delta(271,272,'S').ignore()
+⧐M.delta(271,272,'#').ignore()
+⧐M.delta(272,273,')').ignore()
+⧐M.delta(273,99,';').ignore()
+⧐
+⧐	// FREE
+⧐M.delta(99,280,'Q').ignore()
+⧐M.delta(280,281,'(').ignore()
+⧐M.delta(281,282,'s').ignore()
+⧐M.delta(281,282,'S').ignore()
+⧐M.delta(281,282,'#').ignore()
+⧐M.delta(282,283,')').ignore()
+⧐M.delta(283,99,';').ignore()
+⧐
+⧐	// POP
+⧐M.delta(99,290,'P').ignore()
+⧐M.delta(290,291,'(').ignore()
+⧐M.delta(291,292,'s').ignore()
+⧐M.delta(291,292,'S').ignore()
+⧐M.delta(291,292,'#').ignore()
+⧐M.delta(292,293,')').ignore()
+⧐M.delta(293,99,';').ignore()
+⧐
+⧐	// FUNCIONES 
+⧐M.delta(99,300,'s').ignore()
+⧐M.delta(99,300,'S').ignore()
+⧐M.delta(300,301,'(').ignore()
+⧐M.delta(301,302,'s').ignore()
+⧐M.delta(301,302,'S').ignore()
+⧐M.delta(301,302,'#').ignore()
+⧐M.delta(302,301,',').ignore()
+⧐M.delta(302,303,')').ignore()
+⧐M.delta(303,99,';').ignore()
+
+
+
+ // this will only  be used when testing only the parser as the lexer removes  SkipChars
+ 
+ for each q in Q do
+ 	for each s in SkipChars do
+ 	   M.delta(q,q,λ+s).ignore()
+ end
+ end
+
+
+return M
+end
+

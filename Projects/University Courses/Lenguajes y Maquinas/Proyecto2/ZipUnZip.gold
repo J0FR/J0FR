@@ -1,0 +1,27 @@
+using gold.**
+  
+   var A      
+     
+
+
+procedure main(args:String[]) begin
+	var sc:java.util.Scanner(System.$in)
+   
+   
+	A:= ('a'‥'z')∪{' '}
+
+   coder:=ZIP.createTransducer(A)
+   
+   deCoder:=UnZIP.createTransducer(A)
+    
+    
+  //GAutomataFrame.show(coder)
+  //GAutomataFrame.show(deCoder)
+   
+ 	
+  Utilities.testCodeDecode (coder, deCoder)
+		
+end
+
+
+

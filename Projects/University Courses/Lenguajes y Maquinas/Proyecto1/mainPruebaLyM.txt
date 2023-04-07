@@ -1,0 +1,43 @@
+PROG
+var variableA, variableB;
+
+PROC turnAround()
+{
+  veer(around)
+} CORP
+
+PROC stepMove(parameterA)
+{
+  step(parameterA)
+} CORP
+
+PROC repeatStep()
+{
+  look(north);
+  repeatTimes 2 {step(1)}
+} CORP
+
+PROC whileThis()
+{
+  if (not(isfacing(east))) {while (isfacing(north)) do {step(variableA); veer(right)} od} fi
+  
+} CORP
+
+PROC putGlobo()
+{
+  free(1);
+  Dmove(variableB, right)
+  
+} CORP
+
+{
+variableA = 2;
+turnAround();
+stepMove(5);
+variableB = 1;
+repeatStep();
+whileThis();
+putGlobo()
+}
+
+GORP

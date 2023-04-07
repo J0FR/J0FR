@@ -1,0 +1,76 @@
+using gold.**
+
+var A
+
+procedure main(args:String[]) begin
+	A:= ('a'‥'z')∪{' '}
+	
+	zip:=createTransducer(A)
+    //GAutomataFrame.show(zip)
+    Utilities.test(zip)
+end
+ 
+function createTransducer(Alph):ITransducer begin
+	A:= Alph
+	Q:= {⟨letra, countWord, countStrings⟩|letra in A ∪ {'$', ' '}, 0≤countWord≤4 ,0≤countStrings≤3}∪{"F", "I", "E"}
+	Σ:=A ∪ {'$', ' '}
+	Σ´:=A ∪('0'‥'4')∪{'$', '#', '*', '@'}
+	q₀:="I"
+	F:={"F"}
+	return 	GDeterministicTransducer(Q,Σ,Σ´,q₀,F,d,g,h)
+end
+
+function d(q,σ) begin
+	if q="F" then
+		return "F"
+	elseif q = "E" then return "E"
+	elseif σ='$' then
+			return "F"
+		else
+			return ⟨σ, 1, 1⟩
+		end
+	end
+
+function d(⟨letra, countWord, countStrings⟩,a) begin
+		
+	if (a = ' ' or a = '$') and letra = ' ' then return "E"
+		
+	elseif a='$' then return "F"
+		
+	elseif letra = ' ' then return ⟨a, 1, 1⟩
+		
+	elseif countWord = 0 then return ⟨a, (countWord + 1)%4, (countStrings + 1)%3⟩
+		
+	else return ⟨a, (countWord + 1)%4, countStrings⟩
+	end
+end
+
+function g(q) begin
+	return λ
+end
+
+function h(q,σ) begin
+	return σ
+end
+
+function h(⟨letra, countWord, countStrings⟩,a) begin
+	if a = '$' then 
+		if countWord = 1 then return "###"+String.valueOf(countStrings) + '$'
+		elseif countWord = 2 then return "##"+String.valueOf(countStrings) + '$' 
+		elseif countWord = 3 then return "#" +String.valueOf(countStrings) + '$' 
+		else return String.valueOf(countStrings) + '$' end
+			
+			
+	elseif a = ' ' then  
+		if countWord = 3 then return "#"+String.valueOf(countStrings)+ '*'
+		elseif countWord = 1 then return "###"+String.valueOf(countStrings)+ '*'
+		elseif countWord = 2 then return "##"+String.valueOf(countStrings)+ '*' 
+		else return String.valueOf(countStrings) + '*' end
+	
+	elseif countWord = 0 and letra ≠ ' ' then return '@' + String.valueOf(a)
+
+	else return a
+		
+	end
+
+end

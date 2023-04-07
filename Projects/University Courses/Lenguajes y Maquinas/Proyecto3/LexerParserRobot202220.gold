@@ -1,0 +1,172 @@
+using gold.**
+
+
+ 
+chars(string) :=  {string.charAt(i)| 0 <= i <string.length() }
+charsStrings(strings) := (∪ s | s ∈ strings: chars(s) )
+elements(array) :=  {array[i]| 0 <= i < |array| }
+get1(⟨r,i⟩):= r
+get2(⟨r,i⟩):= i
+  
+   
+var lexer:GDeterministicTransducer
+var parser:GPushdownAutomaton
+
+procedure main(args:String[]) begin
+    currentString := λ
+    
+    lexer = Lexer202220.createLexer()
+  
+    parser = ParserRobot202220.createParser(lexer.getOutputAlphabet())
+	 
+	 
+	 //testLexer(lexer)
+	 //GAutomataFrame.show(parser)
+   
+	 
+	 
+	 testLexerParser(lexer,parser)
+end
+  
+  
+procedure testLexer(M:ITransducer) begin
+	var sc:java.util.Scanner(System.$in)
+ 	var string:String	
+   var input:String
+   
+   
+   inputA = elements(M.getInputAlphabet())
+   input = ""
+	print "----------------------------"
+	print "Enter one or more lines. End with a single line with $"
+   print "If you want to stop testing, enter EXIT"
+   string:=sc.nextLine() 
+   while string != "EXIT" do
+		string := string + " \n "	
+      	input := ""
+      	while string.charAt(0) != '$' do
+ 			input := input + string 
+         	string:=sc.nextLine() + " \n  "
+      	end
+       if chars(input) ⊆ inputA then
+ 			currentString :=  λ
+          images := GArrayList()
+       	
+       	result:=Lexer202220.runLexer(M, input)
+       	
+       	
+		   ok:=get1(result)
+		   images:=get2(result)
+		   	tokenStream := M.getOutputString()
+		   	
+		   	print "The input was "+(ok?"":"not ")+" accepted by the lexer."
+			if ok then 
+				print "Token Stream:  "+ tokenStream 
+			   	print "Strings: "+images
+			else print "Partial token Stream "+ tokenStream 
+			end
+		else print "Input contains invalid characters: "+ (chars(input) \ inputA)
+		end
+       print "----------------------------"
+	
+	   	print "Enter one or more lines. End with a single line with $"
+       print "If you want to stop testing, enter EXIT"
+       string:=sc.nextLine()
+       
+end
+print  "Good bye"
+print  ""
+
+end 
+
+
+  
+ 
+
+
+
+procedure testLexerParser(M:ITransducer, P:IPushdownAutomaton) begin
+	var sc:java.util.Scanner(System.$in)
+    var string:String	
+    
+    
+    
+    inputA = elements(M.getInputAlphabet())
+      inputP = elements(P.getInputAlphabet())
+    
+    
+	input = ""
+		
+		
+		print "----------------------------"
+		print "Enter one or more lines. End with a single line with $"
+       print "If you want to stop testing, enter EXIT"
+       string:=sc.nextLine() 
+       
+
+
+
+	while string != "EXIT" do
+		
+	   string := string + "  \n "	
+       input := ""
+       while string.charAt(0) != '$' do
+              input := input + string 
+              string:=sc.nextLine() + " \n "
+       end
+       option := λ
+       while option  ∉ {"1","2", "3"} do
+        	print "What do you want to do?"
+			print "1. Lexer only?" 
+			print "2. Lexer and parser?"
+			print "3. Parser?"
+		 	option := sc.nextLine()
+		end
+       stringOut:= ""
+       if option ∈  { "1",  "2"} then
+       	if chars(input) ⊆ inputA then
+          	currentString :=  λ
+          	images := GArrayList()
+       	
+       		result:=Lexer202220.runLexer(M, input)
+       	
+       	
+		   		ok:=get1(result)
+		   		images:=get2(result)
+		   		tokenStream := M.getOutputString()
+		   	
+				print "The input was "+(ok?"":"not ")+" accepted by the lexer."
+				if ok then 
+					print "Token Stream:  "+ tokenStream 
+			  		print "Strings: "+images
+			  		if option="2" then
+			   			ok:=P.acceptsString(tokenStream )
+         				print "Parser result: "+(ok?"accepted ":"rejected ")
+         			end
+				else print "Partial token Stream: "+ tokenStream 
+				end
+				else print "Input contains invalid characters: "+ (chars(input) \ inputA)
+			end
+	else
+		 	if chars(input) ⊆ inputP then
+            		ok:=P.acceptsString(input)
+         				print "Parser result: "+(ok?"accepted ":"rejected ")
+		
+		   else print "Input contains invalid characters: "+ (chars(input) \ inputP)
+	end	
+	end
+       	print "----------------------------"
+	
+	   print "Enter one or more lines. End with a single line with $"
+       print "If you want to stop testing, enter EXIT"
+       string:=sc.nextLine()
+       
+end
+print  "Good bye"
+print  ""
+
+end 
+
+
+
+
