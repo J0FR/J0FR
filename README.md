@@ -1,5 +1,15 @@
 ### Hi there 👋
 
+- 👾 Systems and Computer Engineering student
+- 🌱 I’m currently learning C++ & Kotlin
+- 😎 Check my website https://j0fr.com
+
+<br>
+
+Feel free to contact me :yum:
+<br><br>
+[<img src="https://img.shields.io/badge/Email-jd.florezr1%40uniandes.edu.co-orange">](mailto:jd.florezr1@uniandes.edu.co)
+
 <!--
 **J0FR/J0FR** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
